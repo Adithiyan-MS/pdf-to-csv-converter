@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet"/>
+    <title>PDF to CSV Converter</title>
+    <link rel="icon" href="favicon1.ico" type="image/x-icon">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        body.light-mode {
+            background-color: #f9fafb;
+            color: #333;
+        }
+        body.dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+        .header, .footer {
+            width: 100%;
+            text-align: center;
+            padding: 1rem;
+            background-color: var(--header-bg, #e2e8f0);
+            color: var(--header-color, #333);
+        }
+        .header .typewriter {
+            font-size: 2rem;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: .15em solid #333;
+            animation: blink-caret .75s step-end infinite;
+        }
+        .footer {
+            background-color: var(--footer-bg, #e2e8f0);
+            color: var(--footer-color, #333);
+            overflow: hidden;
+            position: relative;
+            height: 2rem;
+        }
+        .footer .marquee {
+            display: inline-block;
+            white-space: nowrap;
+            position: absolute;
+            animation: marquee 10s linear infinite;
+            top: 0.5rem; /* Adjust this value to position the text higher */
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #333; }
+        }
+        .container {
+            max-width: 600px;
+            width: 90%;
+            background-color: var(--container-bg, #fff);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: auto;
+            position: relative;
+        }
+        .container h1 {
+            margin-bottom: 20px;
+            font-size: 32px;
+            color: var(--text-color, #333);
+        }
+        .container input,
+        .container button,
+        .container a {
+            width: 100%;
+            margin-bottom: 20px;
+            font-size: 18px;
+            background-color: var(--input-bg, #fff);
+            color: var(--input-color, #333);
+            border-color: var(--border-color, #ccc);
+        }
+        .dark-mode .header, .dark-mode .footer {
+            --header-bg: #444;
+            --header-color: #fff;
+            --footer-bg: #444;
+            --footer-color: #fff;
+        }
+        .dark-mode .container {
+            --container-bg: #444;
+            --text-color: #fff;
+            --input-bg: #555;
+            --input-color: #fff;
+            --border-color: #666;
+        }
+        .light-mode .bg-blue-500 {
+            background-color: #4299e1;
+            color: #fff;
+        }
+        .dark-mode .bg-blue-500 {
+            background-color: #2b6cb0;
+            color: #fff;
+        }
+        .light-mode .bg-green-500 {
+            background-color: #48bb78;
+            color: #fff;
+        }
+        .dark-mode .bg-green-500 {
+            background-color: #2f855a;
+            color: #fff;
+        }
+        .light-mode .bg-red-500 {
+            background-color: #f56565;
+            color: #fff;
+        }
+        .dark-mode .bg-red-500 {
+            background-color: #c53030;
+            color: #fff;
+        }
+        .light-mode .bg-gray-500 {
+            background-color: #a0aec0;
+            color: #fff;
+        }
+        .dark-mode .bg-gray-500 {
+            background-color: #718096;
+            color: #fff;
+        }
+        .toggle-mode {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .light-mode .toggle-mode {
+            color: #000;
+        }
+        .dark-mode .toggle-mode {
+            color: #fff;
+        }
+        .light-mode #outputMessage {
+            color: #333;
+        }
+        .dark-mode #outputMessage {
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <div class="header">
+        <span class="typewriter" id="typewriterText"></span>
+    </div>
+    <div class="toggle-mode" id="toggleMode">☀</div>
+    <div class="container text-center">
+        <h1>PDF to CSV</h1>
+        <input type="file" id="pdfFile" accept="application/pdf" class="block w-full mb-4 border border-gray-300 p-4 rounded">
+        <input type="number" id="usernameLength" placeholder="Username length" class="block w-full mb-4 border border-gray-300 p-4 rounded">
+        <button id="convertButton" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Convert</button>
+        <a id="downloadLink" href="#" class="bg-green-500 text-white py-2 px-4 rounded mt-4 hover:bg-green-600" style="display: none;">Download CSV</a>
+        <button id="clearButton" class="bg-red-500 text-white py-2 px-4 rounded mt-4 hover:bg-red-600" style="display: none;">Clear</button>
+        <div id="outputMessage" class="text-center mt-4 text-gray-600"></div>
+    </div>
+    <div class="footer">
+        <div class="marquee">Thank you for using our Service. See you Again 😊</div>
+    </div>
+	
+    <script>
+        const text = "Welcome to Our Webpage";
+        let index = 0;
+        const typewriterText = document.getElementById('typewriterText');
+
+        function typeWriter() {  // typewriting effect
+            if (index < text.length) {
+                typewriterText.innerHTML += text.charAt(index);
+                index++;
+                setTimeout(typeWriter, 100);
+            } else {
+                setTimeout(eraseText, 2000);
+            }
+        }
+
+        function eraseText() {  
+            if (index > 0) {
+                typewriterText.innerHTML = text.substring(0, index - 1);
+                index--;
+                setTimeout(eraseText, 100);
+            } else {
+                setTimeout(typeWriter, 1000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            typeWriter();
+        });
+    </script>
+    <script src="app.js" defer></script>
+</body>
+</html>
